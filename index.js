@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 
 const database = require("./config/database");
+const { cloudinaryConnect } = require("./config/cloudinary")
 
 require("dotenv").config();
 
@@ -9,6 +10,9 @@ const port = process.env.PORT || 4000;
 
 // connect to database
 database.connect();
+
+// connect with cloudinary
+cloudinaryConnect();
 
 // activate server
 app.listen(process.env.port, () => {
