@@ -8,6 +8,9 @@ const blogSchema = new mongoose.Schema({
     blogImage: {
         type: String
     },
+    blogImagePublicId: {
+        type: String
+    },
     blogContent: {
         type: String,
         required: true
