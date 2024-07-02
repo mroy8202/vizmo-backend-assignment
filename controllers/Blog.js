@@ -147,3 +147,69 @@ exports.deleteBlog = async (req, res) => {
         });
     }
 }
+
+// update an existing blog post
+exports.updateBlog = async (req, res) => {
+    try {
+        // fetch blog id that has to be updated
+        const blogId = req.params.id;
+
+        // check if blog is available in the database with blogId
+        const blog = await Blog.findById(blogId);
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found with given blogId",
+            });
+        }
+
+        // check if user is authorized to update the Blog
+        const userId = req.user.id;
+        if (userId !== blog.blogPostedBy.toString()) {
+            return res.status(401).json({
+                success: false,
+                message: "User is not authorized to update the post",
+            });
+        }
+
+        // fetch updated blogTitle and blogContent
+        const { blogTitle, blogContent } = req.body;
+        let updatedFields = {};
+        if(blogTitle) updatedFields.blogTitle = blogTitle;
+        if(blogContent) updatedFields.blogContent = blogContent;
+
+        // fetch and update image if available
+        if (req.files && req.files.blogImage) {
+            const photo = req.files.blogImage;
+            // delete old image from cloudinary if it exists
+            if(blog.blogImagePublicId) {
+                await Cloudinary.uploader.destroy(blog.blogImagePublicId);
+            }
+
+            // upload new image to cloudinary
+            const image = await uploadImageToCloudinary(photo, process.env.FOLDER_NAME);
+            updatedFields.blogImage = image.secure_url;
+            updatedFields.blogImagePublicId = image.public_id;
+        }
+
+        // update the blog in the database
+        const updatedBlog = await Blog.findByIdAndUpdate(
+            blogId,
+            { $set: updatedFields },
+            { new: true, runValidators: true } // makes sure that updated data adheres to schema's rules
+        );
+
+        // return a successful response
+        return res.status(200).json({
+            success: true,
+            message: "Blog updated successfully",
+            data: updatedBlog
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error occurred while updating the blog",
+            error: error.message
+        });
+    }
+};
