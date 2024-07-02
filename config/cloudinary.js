@@ -12,3 +12,13 @@ exports.cloudinaryConnect = () => {
         console.log("Cloudinary Error: ", error)
     }
 };
+
+exports.uploadImageToCloudinary = async (file, folder, quality) => {
+    const options = { folder };
+    options.resource_type = "auto";
+    if(quality) {
+        options.quality = quality;
+    }
+
+    return await cloudinary.uploader.upload(file.tempFilePath, options);
+}
