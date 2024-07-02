@@ -213,3 +213,37 @@ exports.updateBlog = async (req, res) => {
         });
     }
 };
+
+// Get details of a single blog post
+exports.getBlog = async (req, res) => {
+    try {
+        // fetch blog id from the request parameters
+        const blogId = req.params.id;
+
+        // find the blog by id and populate the blogPostedBy field to get user details
+        const blog = await Blog.findById(blogId).populate('blogPostedBy', 'name username email');
+
+        // if blog not found, return a 404 response
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found with the given blogId"
+            });
+        }
+
+        // return a successful response with blog details
+        return res.status(200).json({
+            success: true,
+            message: "Blog fetched successfully",
+            data: blog
+        });
+    } catch (error) {
+        // return a 500 response if there's an error
+        return res.status(500).json({
+            success: false,
+            message: "Error occurred while fetching the blog",
+            error: error.message
+        });
+    }
+};
+
